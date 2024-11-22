@@ -2,24 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Spin Wheel</title>
     <link rel="stylesheet" href="./css/style.css">
     <script>
         document.oncontextmenu = function(){ return false; }
-        document.onselectstart = function(){ return false; }
-        document.ondragstart = function(){ return false; }
-        document.onkeydown = function(){ 
-            if(event.keyCode == 123) { // F12鍵
-                return false;
-            }
-            if(event.ctrlKey && event.shiftKey && event.keyCode == 73){ // Ctrl+Shift+I
-                return false;
-            }
-            if(event.ctrlKey && event.keyCode == 85){ // Ctrl+U
-                return false;
-            }
-        }
     </script>
 </head>
 <body>
@@ -28,6 +17,7 @@
             <img id="wheelImage" src="./images/20241121 SpinWheel V1.png" alt="轉盤">
             <img id="pointerImage" src="./images/20241121 zhizhen V1.png" alt="指針">
         </div>
+        <button id="fullscreenBtn" class="fullscreen-btn">Full Screen</button>
     </div>
     <script src="./js/script.js"></script>
     <script src="./js/script.min.js"></script>

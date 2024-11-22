@@ -6,12 +6,14 @@
 
 body {
     overflow: hidden;
+    width: 100vw;
+    height: 100vh;
 }
 
 .container {
     position: relative;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -20,16 +22,17 @@ body {
 
 .wheel-container {
     position: relative;
-    width: min(90vh, 90vw);
-    height: min(90vh, 90vw);
+    height: 100%;
+    aspect-ratio: 1/1;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 20px;
 }
 
 #wheelImage {
-    width: 100%;
     height: 100%;
+    width: auto;
     object-fit: contain;
     transition: transform 5s cubic-bezier(0.2, 0.8, 0.3, 0.99);
 }
@@ -39,8 +42,8 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 100%;
     height: 100%;
+    width: auto;
     object-fit: contain;
     cursor: pointer;
     z-index: 2;
@@ -50,13 +53,97 @@ body {
     pointer-events: none;
 }
 
-/* iPad 橫屏特定樣式 */
+/* 橫屏設備 */
+@media (orientation: landscape) {
+    .wheel-container {
+        height: 95vh;
+    }
+}
+
+/* 豎屏設備 */
+@media (orientation: portrait) {
+    .wheel-container {
+        width: 95vw;
+        height: auto;
+    }
+}
+
+/* iPad Pro */
+@media only screen 
+and (min-device-width: 1024px) 
+and (max-device-width: 1366px) {
+    .wheel-container {
+        height: 90vh;
+    }
+}
+
+/* iPad 和其他平板 */
 @media only screen 
 and (min-device-width: 768px) 
-and (max-device-width: 1024px) 
-and (orientation: landscape) {
+and (max-device-width: 1023px) {
     .wheel-container {
-        width: 80vh;
+        height: 85vh;
+    }
+}
+
+/* 大型手機 */
+@media only screen 
+and (min-device-width: 414px) 
+and (max-device-width: 767px) {
+    .wheel-container {
+        width: 90vw;
+        height: auto;
+    }
+}
+
+/* 小型手機 */
+@media only screen 
+and (max-device-width: 413px) {
+    .wheel-container {
+        width: 95vw;
+        height: auto;
+    }
+}
+
+/* 確保在較寬的屏幕上不會過大 */
+@media only screen 
+and (min-width: 1367px) {
+    .wheel-container {
         height: 80vh;
+        max-height: 900px;
+    }
+}
+
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1000;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fullscreen-btn:active {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* 在全屏模式下隱藏按鈕 */
+.is-fullscreen .fullscreen-btn {
+    display: none;
+}
+
+/* 適配 iPad 的安全區域 */
+@supports (padding: max(0px)) {
+    .container {
+        padding-top: max(20px, env(safe-area-inset-top));
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
     }
 }
