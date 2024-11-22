@@ -4,7 +4,7 @@ function fakeRotateWheel() {
     console.log('Wheel is rotating...');
 }
 
-// 添加全屏相關功能
+// 全屏相關功能
 document.addEventListener('DOMContentLoaded', function() {
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const container = document.querySelector('.container');
@@ -57,32 +57,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 監聽全屏狀態變化
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
     function handleFullscreenChange() {
         if (getFullscreenElement()) {
             document.body.classList.add('is-fullscreen');
             // 強制滾動以隱藏工具欄
             window.scrollTo(0, 1);
-            // 進入全屏時自動調整到合適大小
-            const wheelContainer = document.querySelector('.wheel-container');
-            const scaleSlider = document.getElementById('scaleSlider');
-            const isLandscape = window.innerWidth > window.innerHeight;
-            const defaultScale = isLandscape ? 90 : 80;
-            scaleSlider.value = defaultScale;
-            updateScale(defaultScale);
         } else {
             document.body.classList.remove('is-fullscreen');
-            // 退出全屏時重置縮放
-            const wheelContainer = document.querySelector('.wheel-container');
-            const scaleSlider = document.getElementById('scaleSlider');
-            scaleSlider.value = 100;
-            updateScale(100);
         }
     }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     // 處理 iOS 的特殊情況
     if (navigator.standalone) {
@@ -127,13 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 頁面加載和方向變化時調整大小
     window.addEventListener('load', adjustInitialSize);
     window.addEventListener('orientationchange', adjustInitialSize);
-    
-    // 處理全屏狀態變化時的縮放調整
-    const originalHandleFullscreenChange = handleFullscreenChange;
-    handleFullscreenChange = function() {
-        originalHandleFullscreenChange();
-        setTimeout(adjustInitialSize, 100);
-    };
 });
 
 // 防止 iOS 滾動橡皮筋效果

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>轉盤角度顯示</title>
+    <title>SpinWheelDataRecord</title>
     <style>
         body {
             margin: 0;
@@ -13,7 +13,7 @@
         }
         
         .display-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: white;
@@ -21,104 +21,265 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .angle-display {
-            font-size: 24px;
-            margin-bottom: 20px;
-            padding: 15px;
+        .award-display {
+            font-size: 32px;
+            margin-bottom: 30px;
+            padding: 30px;
             background-color: #f8f8f8;
-            border-radius: 5px;
+            border-radius: 10px;
             text-align: center;
+            color: #2c3e50;
+            transition: background-color 0.3s ease;
+        }
+
+        .award-title {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .award-content {
+            font-size: 36px;
+            font-weight: bold;
+            line-height: 1.4;
+            white-space: pre-line;
+        }
+
+        /* 高亮動畫 */
+        @keyframes highlight {
+            0% { background-color: #f8f8f8; }
+            50% { background-color: #fff3cd; }
+            100% { background-color: #f8f8f8; }
+        }
+
+        .highlight {
+            animation: highlight 1s ease;
+        }
+        
+        .history-section {
+            margin-top: 30px;
+        }
+        
+        .date-group {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .date-header {
+            padding: 10px 15px;
+            background-color: #f8f8f8;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .date-header:hover {
+            background-color: #f0f0f0;
         }
         
         .history-list {
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 300px;
-            overflow-y: auto;
+            display: none;
+        }
+        
+        .history-list.active {
+            display: block;
         }
         
         .history-item {
-            padding: 10px;
+            padding: 15px;
             border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
         
         .history-item:last-child {
             border-bottom: none;
         }
         
+        .prize-info {
+            flex-grow: 1;
+            padding: 0 15px;
+        }
+        
         .timestamp {
             color: #666;
             font-size: 0.9em;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .sequence-number {
+            min-width: 50px;
+            color: #888;
         }
     </style>
 </head>
 <body>
     <div class="display-container">
-        <div class="angle-display">
-            當前角度：<span id="currentAngle">--</span>°
+        <div class="award-display">
+            <div class="award-title">Current Award</div>
+            <div id="currentPrize" class="award-content">--</div>
         </div>
-        <div>
-            <h3>歷史記錄：</h3>
-            <ul id="historyList" class="history-list"></ul>
+        <div class="history-section">
+            <h2>History Records</h2>
+            <div id="historyGroups"></div>
         </div>
     </div>
 
     <script>
         let lastAngle = null;
+        let historyData = JSON.parse(localStorage.getItem('prizeHistory') || '[]');
+        let totalRecords = historyData.length;
 
-        // 格式化時間
+        function getPrizeContent(angle) {
+            const normalizedAngle = ((angle % 360) + 360) % 360;
+            console.log('Original angle:', angle, 'Normalized angle:', normalizedAngle);
+            
+            if ((normalizedAngle >= 0 && normalizedAngle <= 16) || 
+                (normalizedAngle >= 344 && normalizedAngle <= 360)) {
+                return "Free Single Scoop Gelato";
+            } else if (
+                (normalizedAngle >= 20 && normalizedAngle <= 52) ||
+                (normalizedAngle >= 128 && normalizedAngle <= 160) ||
+                (normalizedAngle >= 236 && normalizedAngle <= 268)
+            ) {
+                return "Free Topping or Nutella Drizzle (Next Purchase)";
+            } else if (
+                (normalizedAngle >= 54 && normalizedAngle <= 88) ||
+                (normalizedAngle >= 272 && normalizedAngle <= 304)
+            ) {
+                return "10% Off Next Purchase";
+            } else if (
+                (normalizedAngle >= 200 && normalizedAngle <= 232) ||
+                (normalizedAngle >= 308 && normalizedAngle <= 340)
+            ) {
+                return "Free Upsize Next Purchase";
+            }
+
+            console.log('Invalid Angle:', normalizedAngle);
+            return `Error: Invalid angle ${normalizedAngle}°`;
+        }
+
         function formatTime(date) {
-            return date.toLocaleTimeString('zh-TW', { 
+            return date.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
             });
         }
 
-        // 添加歷史記錄
-        function addHistoryItem(angle) {
-            const historyList = document.getElementById('historyList');
-            const li = document.createElement('li');
-            li.className = 'history-item';
-            const time = new Date();
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric'
+            });
+        }
+
+        function addHistoryItem(angle, prize) {
+            const now = new Date();
+            const historyItem = {
+                id: ++totalRecords,
+                angle: angle,
+                prize: prize,
+                timestamp: now.getTime(),
+                date: formatDate(now),
+                time: formatTime(now)
+            };
             
-            li.innerHTML = `
-                <span>角度：${angle}°</span>
-                <span class="timestamp">${formatTime(time)}</span>
-            `;
+            historyData.unshift(historyItem);
+            localStorage.setItem('prizeHistory', JSON.stringify(historyData));
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyGroups = document.getElementById('historyGroups');
+            historyGroups.innerHTML = '';
             
-            historyList.insertBefore(li, historyList.firstChild);
-            
-            // 限制歷史記錄數量
-            if (historyList.children.length > 50) {
-                historyList.removeChild(historyList.lastChild);
-            }
+            // Group by date
+            const groupedHistory = historyData.reduce((groups, item) => {
+                if (!groups[item.date]) {
+                    groups[item.date] = [];
+                }
+                groups[item.date].push(item);
+                return groups;
+            }, {});
+
+            Object.entries(groupedHistory).forEach(([date, items]) => {
+                const dateGroup = document.createElement('div');
+                dateGroup.className = 'date-group';
+                
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'date-header';
+                dateHeader.innerHTML = `
+                    <span>${date}</span>
+                    <span>${items.length} records</span>
+                `;
+                dateHeader.onclick = () => {
+                    historyList.classList.toggle('active');
+                };
+
+                const historyList = document.createElement('div');
+                historyList.className = 'history-list';
+
+                items.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <span class="sequence-number">#${item.id}</span>
+                        <span class="prize-info">${item.prize}</span>
+                        <span class="timestamp">${item.time}</span>
+                    `;
+                    historyList.appendChild(historyItem);
+                });
+
+                dateGroup.appendChild(dateHeader);
+                dateGroup.appendChild(historyList);
+                historyGroups.appendChild(dateGroup);
+            });
+        }
+
+        function updateCurrentAward(prize) {
+            const prizeElement = document.getElementById('currentPrize');
+            prizeElement.textContent = prize;
+            // 添加高亮效果
+            prizeElement.classList.remove('highlight');
+            void prizeElement.offsetWidth; // 強制重繪
+            prizeElement.classList.add('highlight');
         }
 
         // 監聽 localStorage 變化
         window.addEventListener('storage', function(e) {
             if (e.key === 'wheelAngle') {
                 const angle = parseFloat(e.newValue);
-                document.getElementById('currentAngle').textContent = angle.toFixed(2);
+                const prize = getPrizeContent(angle);
+                updateCurrentAward(prize);
                 if (lastAngle !== angle) {
-                    addHistoryItem(angle.toFixed(2));
+                    addHistoryItem(angle, prize);
                     lastAngle = angle;
                 }
             }
         });
 
-        // 頁面加載時檢查是否有存儲的角度
+        // 頁面加載時檢查並顯示數據
         document.addEventListener('DOMContentLoaded', function() {
             const storedAngle = localStorage.getItem('wheelAngle');
             if (storedAngle) {
                 const angle = parseFloat(storedAngle);
-                document.getElementById('currentAngle').textContent = angle.toFixed(2);
-                addHistoryItem(angle.toFixed(2));
+                const prize = getPrizeContent(angle);
+                updateCurrentAward(prize);
                 lastAngle = angle;
             }
+            updateHistoryDisplay();
         });
     </script>
 </body>
