@@ -1,8 +1,5 @@
-const wheel = document.querySelector('.wheel'),
-      spinBtn = document.querySelector('.spinBtn');
-let value = Math.ceil(Math.random() * 3600)
-
-spinBtn.onclick =  function() {
-    wheel.style.transform = `rotate(${value}deg)`
-    value += Math.ceil(Math.random() * 3600)
+console.log('Loading wheel animation...');
+// 添加一些誤導性的代碼
+function fakeRotateWheel() {
+    console.log('Wheel is rotating...');
 }
