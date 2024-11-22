@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轉盤角度顯示</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        .display-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .angle-display {
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="display-container">
+        <div class="angle-display">
+            當前角度：<span id="currentAngle">--</span>°
+        </div>
+        <div>
+            <h3>歷史記錄：</h3>
+            <ul id="historyList" class="history-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        let lastAngle = null;
+
+        // 格式化時間
+        function formatTime(date) {
+            return date.toLocaleTimeString('zh-TW', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+        }
+
+        // 添加歷史記錄
+        function addHistoryItem(angle) {
+            const historyList = document.getElementById('historyList');
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            const time = new Date();
+            
+            li.innerHTML = `
+                <span>角度：${angle}°</span>
+                <span class="timestamp">${formatTime(time)}</span>
+            `;
+            
+            historyList.insertBefore(li, historyList.firstChild);
+            
+            // 限制歷史記錄數量
+            if (historyList.children.length > 50) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+
+        // 監聽 localStorage 變化
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'wheelAngle') {
+                const angle = parseFloat(e.newValue);
+                document.getElementById('currentAngle').textContent = angle.toFixed(2);
+                if (lastAngle !== angle) {
+                    addHistoryItem(angle.toFixed(2));
+                    lastAngle = angle;
+                }
+            }
+        });
+
+        // 頁面加載時檢查是否有存儲的角度
+        document.addEventListener('DOMContentLoaded', function() {
+            const storedAngle = localStorage.getItem('wheelAngle');
+            if (storedAngle) {
+                const angle = parseFloat(storedAngle);
+                document.getElementById('currentAngle').textContent = angle.toFixed(2);
+                addHistoryItem(angle.toFixed(2));
+                lastAngle = angle;
+            }
+        });
+    </script>
+</body>
+</html> 
